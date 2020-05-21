@@ -16,7 +16,7 @@ using namespace cv;
 using namespace cv::xfeatures2d;
 
 cv::Mat H;
-vector<cv::Point2f> objectPoints, framePoints;
+vector<vector<cv::Point2f>> framePoints;
 vector<cv::DMatch> goodMatches;
 
 bool useSift = true;
@@ -60,8 +60,8 @@ vector<Mat> findPointsHomographies(vector<vector<KeyPoint>> objKeypoints, vector
         vector<Point2f> objectPoints, framePoints;
         vector<KeyPoint> objectKeypoint = objKeypoints[i];
         for (int j = 0; j < dMatch.size(); ++j) {
-            objectPoints.push_back(objectKeypoint[dMatch[i].queryIdx].pt);
-            framePoints.push_back(frameKeypoints[dMatch[i].trainIdx].pt);
+            objectPoints.push_back(objectKeypoint[dMatch[j].queryIdx].pt);
+            framePoints.push_back(frameKeypoints[dMatch[j].trainIdx].pt);
         }
         vector<int> mask;
         Mat H = cv::findHomography(objectPoints, framePoints, cv::RANSAC, 3, mask);
@@ -117,7 +117,7 @@ int main() {
         }
         cv::Mat frameDescriptors;
         frameDescriptor(firstFrame, frameKeypoints, frameDescriptors);
-        vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objects, firstFrame, frameDescriptors);
+        vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, firstFrame, frameDescriptors);
         
         vector<vector<int>> maskes;
         vector<Mat> Hs = findPointsHomographies(objKeypoints, frameKeypoints, dmatches, maskes);
@@ -127,12 +127,14 @@ int main() {
             vector<int> mask = maskes[i];
             vector<DMatch> matches = dmatches[i];
             vector<DMatch> good_matches;
+            vector<Point2f> frame_points;
             for (int j = 0; j < mask.size(); ++j) {
-                if (mask[i]) {
-                    framePoints.push_back(frameKeypoints[matches[j].trainIdx].pt);
+                if (mask[j]) {
+                    frame_points.push_back(frameKeypoints[matches[j].trainIdx].pt);
                     good_matches.push_back(matches[j]);
                 }
             }
+            framePoints.push_back(frame_points);
             goodMathces.push_back(good_matches);
         }
         //==========Object recognition on frame is ended here==============
@@ -156,58 +158,64 @@ int main() {
         drawMatches(object, objKeypoints, firstFrame, frameKeypoints, goodMatches, img_matches);
 
         //Show detected matches
-        imshow("Object detection", img_matches );
+        imshow("Object detection", img_matches );*/
 
         cv::Mat frame_old;
         videoCapture >> frame_old;
-
-        //Create a mask image for drawing purposes
-        //Mat mask = Mat::zeros(frame_old.size(), frame_old.type());
         
-        std::vector<Point2f> p0 = framePoints;
-        std::vector<Point2f> oldRectPoints = scene_corners; //Rect points of the old frame
+        //vector<vector<Point2f>> p0 = framePoints;
+        vector<vector<Point2f>> oldRectPoints = scene_corners; //Rect points of the old frame
         
         while(true) {
             cv::Mat frame;
             videoCapture >> frame;
             if (frame.empty())
                 break;
-
-            //calculate optical flow
-            std::vector<Point2f>  p1;
-            
-            vector<uchar> status;
-            vector<float> err;
-            vector<cv::Mat> pyramid;
-            TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
-            
-            buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
-            calcOpticalFlowPyrLK(pyramid, frame, p0, p1, status, err, Size(7,7), 3, criteria);
-            
-            
-            //Stores the good points of the new and current frames that matches well
-            vector<Point2f> good_old;
-            vector<Point2f> good_new;
-            for(uint i = 0; i < p0.size(); i++) {
+            vector<vector<Point2f>> newPoints;
+            vector<vector<Point2f>> newRectPoints;
+            vector<vector<Point2f>> goodNewPoints;
+            for (int i = 0; i < framePoints.size(); ++i) {
+                std::vector<Point2f> p0 = framePoints[i];
+                //calculate optical flow
+                std::vector<Point2f>  p1;
                 
-                double distance = sqrt(pow(p0[i].x - p1[i].x, 2) + pow(p0[i].y - p1[i].y, 2)); //Distance that is used to seek the stable points
-                //Select good points
-                if(status[i] == 1 && distance <= 10) {
+                
+                vector<uchar> status;
+                vector<float> err;
+                vector<cv::Mat> pyramid;
+                TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
+                
+                buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
+                calcOpticalFlowPyrLK(pyramid, frame, p0, p1, status, err, Size(7,7), 3, criteria);
+                newPoints.push_back(p1);
+                
+                //Stores the good points of the new and current frames that matches well
+                vector<Point2f> good_old;
+                vector<Point2f> good_new;
+                for(uint j = 0; j < p0.size(); j++) {
                     
-                    good_old.push_back(p0[i]);
-                    good_new.push_back(p1[i]);
-                    
-                    //draw the keypoints
-                    circle(frame, p1[i], 3, Scalar( 0, 0, 255), -1);
+                    double distance = sqrt(pow(p0[j].x - p1[j].x, 2) + pow(p0[j].y - p1[j].y, 2)); //Distance that is used to seek the stable points
+                    //Select good points
+                    if(status[j] == 1 && distance <= 10) {
+                        
+                        good_old.push_back(p0[j]);
+                        good_new.push_back(p1[j]);
+                        
+                        //draw the keypoints
+                        circle(frame, p1[j], 3, Scalar( 0, 0, 255), -1);
+                    }
                 }
+                goodNewPoints.push_back(good_new);
+                cv::Mat H = cv::findHomography(good_old, good_new);
+                
+                vector<Point2f> new_rect_points; //Points of the rect of the new frame
+                vector<Point2f> oldPoints = oldRectPoints[i];
+                perspectiveTransform(oldPoints, new_rect_points, H);
+                newRectPoints.push_back(new_rect_points);
+                
+                //Draw red lines
+                drawRect(frame, new_rect_points);
             }
-            
-            cv::Mat H = cv::findHomography(good_old, good_new); //calculate homography matrix between old frame and new frame
-            std::vector<Point2f> newRectPoints; //Points of the rect of the new frame
-            perspectiveTransform( oldRectPoints, newRectPoints, H);
-            
-            //Draw red lines
-            drawRect(frame, newRectPoints);
 
             imshow("Frame", frame);
             int keyboard = waitKey(30);
@@ -216,9 +224,9 @@ int main() {
             
             //Now update the previous frame and previous points
             frame_old = frame.clone();
-            p0 = good_new;
+            framePoints = goodNewPoints;
             oldRectPoints = newRectPoints;
-        }*/
+        }
     }
     cv::waitKey(0);
     return 0;
