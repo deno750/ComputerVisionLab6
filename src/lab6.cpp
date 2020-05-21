@@ -176,20 +176,13 @@ int main() {
                 std::vector<Point2f> newLinePoints;
                 perspectiveTransform( oldLinePoints, newLinePoints, H);
                 oldLinePoints = newLinePoints;
-                //cout << H << endl;
                 
-                //Draw red lines between the corners of the frame object detected
-                line(frameX, newLinePoints[0], newLinePoints[1], Scalar(0, 0, 255));
-                line(frameX, newLinePoints[1], newLinePoints[2], Scalar(0, 0, 255));
-                line(frameX, newLinePoints[2], newLinePoints[3], Scalar(0, 0, 255));
-                line(frameX, newLinePoints[3], newLinePoints[0], Scalar(0, 0, 255));
-                //line( frameX, newLinePoints[0], 0),newLinePoints[1], Scalar(0, 0, 255), 4 );
-                /*line( frameX, scene_corners[1] + Point2f((float)object.cols, 0),
-                      scene_corners[2] + Point2f((float)object.cols, 0), Scalar( 0, 0, 255), 4 );
-                line( frameX, scene_corners[2] + Point2f((float)object.cols, 0),
-                      scene_corners[3] + Point2f((float)object.cols, 0), Scalar( 0, 0, 255), 4 );
-                line( frameX, scene_corners[3] + Point2f((float)object.cols, 0),
-                      scene_corners[0] + Point2f((float)object.cols, 0), Scalar( 0, 0, 255), 4 );*/
+                //Draw red lines
+                line(frameX, newLinePoints[0], newLinePoints[1], Scalar(0, 0, 255), 4);
+                line(frameX, newLinePoints[1], newLinePoints[2], Scalar(0, 0, 255), 4);
+                line(frameX, newLinePoints[2], newLinePoints[3], Scalar(0, 0, 255), 4);
+                line(frameX, newLinePoints[3], newLinePoints[0], Scalar(0, 0, 255), 4);
+                
                 
                 Mat img;
                 add(frameX, mask, img);
