@@ -31,6 +31,7 @@ int main() {
     cv::Mat object = cv::imread("data/objects/obj2.png");
     
     if (object.empty()) {
+        cout << "Unabe to read object file" << endl;
         return -1;
     }
     vector<cv::KeyPoint> objKeypoints;
@@ -56,7 +57,7 @@ int main() {
         videoCapture >> firstFrame;
         //videoCapture.read(firstFrame);
         if (firstFrame.empty()) {
-            cout << "Empry video!" << endl;
+            cout << "Empty video!" << endl;
             return -1;;
         }
         
