@@ -106,7 +106,6 @@ int main() {
 
         //Show detected matches
         imshow("Object detection", img_matches );
-        waitKey(0);
 
         cv::Mat frame_old;
         videoCapture >> frame_old;
