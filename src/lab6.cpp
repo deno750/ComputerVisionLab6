@@ -71,11 +71,13 @@ vector<Mat> findPointsHomographies(vector<vector<KeyPoint>> objKeypoints, vector
     return homographies;
 }
 
-vector<vector<Point2f>> computeRectCorners(vector<Point2f> obj_corners, vector<Mat> Hs) {
+vector<vector<Point2f>> computeRectCorners(vector<vector<Point2f>> obj_corners, vector<Mat> Hs) {
     vector<vector<Point2f>> scene_corners;
-    for (Mat H : Hs) {
+    for (int i = 0; i< obj_corners.size(); ++i) {
+        Mat H = Hs[i];
         vector<Point2f> corners;
-        perspectiveTransform( obj_corners, corners, H);
+        vector<Point2f> object_corners = obj_corners[i];
+        perspectiveTransform( object_corners, corners, H);
         scene_corners.push_back(corners);
     }
     return scene_corners;
@@ -141,13 +143,20 @@ int main() {
         //==========Object recognition on frame is ended here==============
         
         //Get the corners from the frame ( the object to be "detected" )
-        std::vector<Point2f> obj_corners(4);
-        obj_corners[0] = Point2f(0, 0);
-        obj_corners[1] = Point2f( (float)object.cols, 0 );
-        obj_corners[2] = Point2f( (float)object.cols, (float)object.rows );
-        obj_corners[3] = Point2f( 0, (float)object.rows );
         
-        vector<vector<Point2f>> scene_corners = computeRectCorners(obj_corners, Hs);
+        vector<vector<Point2f>> objectCorners;
+        for (Mat object : objects) {
+            std::vector<Point2f> obj_corners = {
+                Point2f(0, 0),
+                Point2f((float) object.cols, 0),
+                Point2f((float) object.cols, (float) object.rows),
+                Point2f(0, (float) object.rows),
+            };
+            objectCorners.push_back(obj_corners);
+        }
+
+        
+        vector<vector<Point2f>> scene_corners = computeRectCorners(objectCorners, Hs);
     
         //Draw red lines between the corners of the frame object detected
         for (vector<Point2f> corners : scene_corners) {
