@@ -94,7 +94,7 @@ int main() {
     cv::Mat object4 = cv::imread("data/objects/obj4.png");
     
     vector<Mat> objects = {object, object2, object3, object4};
-    vector<Scalar> colors = {Scalar(0, 0, 255), Scalar(0, 255, 0), Scalar(255, 0, 0), Scalar(255, 255, 0)};
+    vector<Scalar> colors = {Scalar(0, 0, 255), Scalar(255, 0, 0), Scalar(255, 255, 0), Scalar(255, 255, 255) };
     
     for (Mat object : objects) {
         if (object.empty()) {
