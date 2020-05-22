@@ -92,6 +92,7 @@ int main() {
     cv::Mat object4 = cv::imread("data/objects/obj4.png");
     
     vector<Mat> objects = {object, object2, object3, object4};
+    vector<Scalar> colors = {Scalar(0, 0, 255), Scalar(0, 255, 0), Scalar(255, 0, 0), Scalar(255, 255, 0)};
     
     for (Mat object : objects) {
         if (object.empty()) {
@@ -123,7 +124,7 @@ int main() {
         vector<Mat> Hs = findPointsHomographies(objKeypoints, frameKeypoints, dmatches, maskes);
         
         vector<vector<DMatch>> goodMathces;
-        for (int i = 0; i < maskes.size(); ++i) {
+        for (int i = 0; i < objects.size(); ++i) {
             vector<int> mask = maskes[i];
             vector<DMatch> matches = dmatches[i];
             vector<DMatch> good_matches;
@@ -171,10 +172,12 @@ int main() {
             videoCapture >> frame;
             if (frame.empty())
                 break;
+            Mat drawFrame = frame.clone();
             vector<vector<Point2f>> newPoints;
             vector<vector<Point2f>> newRectPoints;
             vector<vector<Point2f>> goodNewPoints;
-            for (int i = 0; i < framePoints.size(); ++i) {
+            for (int i = 0; i < objects.size(); ++i) {
+                Scalar color = colors[i];
                 std::vector<Point2f> p0 = framePoints[i];
                 //calculate optical flow
                 std::vector<Point2f>  p1;
@@ -196,13 +199,13 @@ int main() {
                     
                     double distance = sqrt(pow(p0[j].x - p1[j].x, 2) + pow(p0[j].y - p1[j].y, 2)); //Distance that is used to seek the stable points
                     //Select good points
-                    if(status[j] == 1 && distance <= 10) {
+                    if(status[j] == 1 && distance <= 5) {
                         
                         good_old.push_back(p0[j]);
                         good_new.push_back(p1[j]);
                         
                         //draw the keypoints
-                        circle(frame, p1[j], 3, Scalar( 0, 0, 255), -1);
+                        circle(drawFrame, p1[j], 3, color, -1);
                     }
                 }
                 goodNewPoints.push_back(good_new);
@@ -214,10 +217,10 @@ int main() {
                 newRectPoints.push_back(new_rect_points);
                 
                 //Draw red lines
-                drawRect(frame, new_rect_points);
+                drawRect(drawFrame, new_rect_points, color);
             }
 
-            imshow("Frame", frame);
+            imshow("Frame", drawFrame);
             int keyboard = waitKey(30);
             if (keyboard == 'q' || keyboard == 27)
                 break;
