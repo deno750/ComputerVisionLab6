@@ -118,6 +118,7 @@ int main() {
             cout << "Empty video!" << endl;
             return -1;;
         }
+        resize(firstFrame, firstFrame, Size(640, 360), 0, 0, INTER_CUBIC);
         cv::Mat frameDescriptors;
         frameDescriptor(firstFrame, frameKeypoints, frameDescriptors);
         vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, firstFrame, frameDescriptors);
@@ -172,6 +173,7 @@ int main() {
 
         cv::Mat frame_old;
         videoCapture >> frame_old;
+        resize(frame_old, frame_old, Size(640, 360), 0, 0, INTER_CUBIC);
         
         //vector<vector<Point2f>> p0 = framePoints;
         vector<vector<Point2f>> oldRectPoints = scene_corners; //Rect points of the old frame
@@ -181,6 +183,7 @@ int main() {
             videoCapture >> frame;
             if (frame.empty())
                 break;
+            resize(frame, frame, Size(640, 360), 0, 0, INTER_CUBIC);
             Mat drawFrame = frame.clone();
             vector<vector<Point2f>> newPoints;
             vector<vector<Point2f>> newRectPoints;
