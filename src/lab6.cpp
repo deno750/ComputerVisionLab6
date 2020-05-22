@@ -15,10 +15,6 @@ using namespace std;
 using namespace cv;
 using namespace cv::xfeatures2d;
 
-cv::Mat H;
-vector<vector<cv::Point2f>> framePoints;
-vector<cv::DMatch> goodMatches;
-
 bool useSift = true;
 
 void drawRect(cv::Mat image, std::vector<Point2f> corners, Scalar color = Scalar(0, 0, 255), int lineWidth = 4);
@@ -126,6 +122,7 @@ int main() {
         vector<vector<int>> maskes;
         vector<Mat> Hs = findPointsHomographies(objKeypoints, frameKeypoints, dmatches, maskes);
         
+        vector<vector<cv::Point2f>> framePoints;
         vector<vector<DMatch>> goodMathces;
         for (int i = 0; i < objects.size(); ++i) {
             vector<int> mask = maskes[i];
@@ -165,6 +162,11 @@ int main() {
         }
         imshow("PROVA", firstFrame);
         
+        for (int i = 0; i < objects.size(); ++i) {
+            Mat img_matches;
+            drawMatches(objects[i], objKeypoints[i], firstFrame, frameKeypoints, goodMathces[i], img_matches);
+            imshow("Matches with object" + to_string(i + 1), img_matches);
+        }
         /*Mat img_matches;
         drawMatches(object, objKeypoints, firstFrame, frameKeypoints, goodMatches, img_matches);
 
