@@ -38,7 +38,7 @@ void frameDescriptor(Mat frame, vector<KeyPoint> &keyPoints, Mat &descriptors) {
     
 }
 
-vector<vector<cv::DMatch>> matchObjectsAndFrame(vector<Mat> objectsdescriptors, Mat frame, Mat frameDescriptors) {
+vector<vector<cv::DMatch>> matchObjectsAndFrame(vector<Mat> objectsdescriptors, Mat frameDescriptors) {
     cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L2, true);
     vector<vector<cv::DMatch>> dmatches;
     for (Mat descriptors : objectsdescriptors) {
@@ -117,7 +117,7 @@ int main() {
         resize(firstFrame, firstFrame, Size(640, 360), 0, 0, INTER_CUBIC);
         cv::Mat frameDescriptors;
         frameDescriptor(firstFrame, frameKeypoints, frameDescriptors);
-        vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, firstFrame, frameDescriptors);
+        vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, frameDescriptors);
         
         vector<vector<int>> maskes;
         vector<Mat> Hs = findPointsHomographies(objKeypoints, frameKeypoints, dmatches, maskes);
