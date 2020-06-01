@@ -215,9 +215,9 @@ int main() {
                 vector<Point2f> good_new;
                 for(uint j = 0; j < p0.size(); j++) {
                     
-                    double distance = sqrt(pow(p0[j].x - p1[j].x, 2) + pow(p0[j].y - p1[j].y, 2)); //Distance that is used to seek the stable points
+                    double distance = (pow(p0[j].x - p1[j].x, 2) + pow(p0[j].y - p1[j].y, 2)); //Distance that is used to seek the stable points. Sqrt is not computed just to maintain the computation of the distance faster.
                     //Select good points
-                    if(status[j] == 1 && distance <= 5) {
+                    if(status[j] == 1 && distance <= 25) { //distance <= 5 pixels squared
                         
                         good_old.push_back(p0[j]);
                         good_new.push_back(p1[j]);
