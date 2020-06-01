@@ -15,9 +15,12 @@ using namespace std;
 using namespace cv;
 using namespace cv::xfeatures2d;
 
-bool useSift = true;
-
-void drawRect(Mat image, std::vector<Point2f> corners, Scalar color = Scalar(0, 0, 255), int lineWidth = 4);
+void drawRect(Mat image, std::vector<Point2f> corners, Scalar color = Scalar(0, 0, 255), int lineWidth = 4) {
+    line(image, corners[0], corners[1], color, lineWidth);
+    line(image, corners[1], corners[2], color, lineWidth);
+    line(image, corners[2], corners[3], color, lineWidth);
+    line(image, corners[3], corners[0], color, lineWidth);
+}
     
 void objectDescriptor(vector<Mat> objects, vector<vector<KeyPoint>> &keyPoints, vector<Mat> &descriptors) {
     Ptr<Feature2D> detector = SIFT::create();
@@ -251,12 +254,5 @@ int main() {
     }
     waitKey(0);
     return 0;
-}
-
-void drawRect(Mat image, std::vector<Point2f> corners, Scalar color, int lineWidth) {
-    line(image, corners[0], corners[1], color, lineWidth);
-    line(image, corners[1], corners[2], color, lineWidth);
-    line(image, corners[2], corners[3], color, lineWidth);
-    line(image, corners[3], corners[0], color, lineWidth);
 }
 
