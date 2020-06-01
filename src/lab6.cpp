@@ -190,7 +190,11 @@ int main() {
             vector<vector<Point2f>> newPoints;
             vector<vector<Point2f>> newRectPoints;
             vector<vector<Point2f>> goodNewPoints;
+            
+            //Frame pyramid calculation
             vector<Mat> pyramid;
+            buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
+            
             for (int i = 0; i < objects.size(); ++i) {
                 Scalar color = colors[i];
                 std::vector<Point2f> p0 = framePoints[i];
@@ -201,9 +205,7 @@ int main() {
                 vector<uchar> status;
                 vector<float> err;
                 TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
-                if (pyramid.size() == 0 || true) {
-                    buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
-                }
+                
                 calcOpticalFlowPyrLK(pyramid, frame, p0, p1, status, err, Size(7,7), 3, criteria);
                 
                 newPoints.push_back(p1);
