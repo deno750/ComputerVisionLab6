@@ -17,10 +17,10 @@ using namespace cv::xfeatures2d;
 
 bool useSift = true;
 
-void drawRect(cv::Mat image, std::vector<Point2f> corners, Scalar color = Scalar(0, 0, 255), int lineWidth = 4);
+void drawRect(Mat image, std::vector<Point2f> corners, Scalar color = Scalar(0, 0, 255), int lineWidth = 4);
     
 void objectDescriptor(vector<Mat> objects, vector<vector<KeyPoint>> &keyPoints, vector<Mat> &descriptors) {
-    cv::Ptr<cv::Feature2D> detector = SIFT::create();
+    Ptr<Feature2D> detector = SIFT::create();
     for (Mat object : objects) {
         vector<KeyPoint> objKeypoints;
         Mat objectDescriptors;
@@ -32,17 +32,17 @@ void objectDescriptor(vector<Mat> objects, vector<vector<KeyPoint>> &keyPoints, 
 }
 
 void frameDescriptor(Mat frame, vector<KeyPoint> &keyPoints, Mat &descriptors) {
-    cv::Ptr<cv::Feature2D> detector = SIFT::create();
+    Ptr<Feature2D> detector = SIFT::create();
     detector->detect(frame, keyPoints);
     detector->compute(frame, keyPoints, descriptors);
     
 }
 
-vector<vector<cv::DMatch>> matchObjectsAndFrame(vector<Mat> objectsdescriptors, Mat frameDescriptors) {
-    cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_L2, true);
-    vector<vector<cv::DMatch>> dmatches;
+vector<vector<DMatch>> matchObjectsAndFrame(vector<Mat> objectsdescriptors, Mat frameDescriptors) {
+    Ptr<BFMatcher> matcher = BFMatcher::create(NORM_L2, true);
+    vector<vector<DMatch>> dmatches;
     for (Mat descriptors : objectsdescriptors) {
-        vector<cv::DMatch> matches;
+        vector<DMatch> matches;
         matcher->match(descriptors, frameDescriptors, matches);
         dmatches.push_back(matches);
     }
@@ -60,7 +60,7 @@ vector<Mat> findPointsHomographies(vector<vector<KeyPoint>> objKeypoints, vector
             framePoints.push_back(frameKeypoints[dMatch[j].trainIdx].pt);
         }
         vector<int> mask;
-        Mat H = cv::findHomography(objectPoints, framePoints, cv::RANSAC, 3, mask);
+        Mat H = findHomography(objectPoints, framePoints, RANSAC, 3, mask);
         homographies.push_back(H);
         maskes.push_back(mask);
     }
@@ -81,13 +81,13 @@ vector<vector<Point2f>> computeRectCorners(vector<vector<Point2f>> obj_corners, 
 
 
 int main() {
-    cv::VideoCapture videoCapture("data/video.mov");
-    vector<cv::Mat> frames;
+    VideoCapture videoCapture("data/video.mov");
+    vector<Mat> frames;
     
-    cv::Mat object = cv::imread("data/objects/obj1.png");
-    cv::Mat object2 = cv::imread("data/objects/obj2.png");
-    cv::Mat object3 = cv::imread("data/objects/obj3.png");
-    cv::Mat object4 = cv::imread("data/objects/obj4.png");
+    Mat object = imread("data/objects/obj1.png");
+    Mat object2 = imread("data/objects/obj2.png");
+    Mat object3 = imread("data/objects/obj3.png");
+    Mat object4 = imread("data/objects/obj4.png");
     
     vector<Mat> objects = {object, object2, object3, object4};
     vector<Scalar> colors = {Scalar(0, 0, 255), Scalar(255, 0, 0), Scalar(255, 255, 0), Scalar(255, 255, 255) };
@@ -99,30 +99,30 @@ int main() {
         }
     }
     
-    vector<vector<cv::KeyPoint>> objKeypoints;
+    vector<vector<KeyPoint>> objKeypoints;
     vector<Mat> objDescriptors;
-    vector<cv::KeyPoint> frameKeypoints;
+    vector<KeyPoint> frameKeypoints;
     objectDescriptor(objects, objKeypoints, objDescriptors);
     
     
     if (videoCapture.isOpened()) {
         //Starting the computation on the first frame
-        cv::Mat firstFrame;
+        Mat firstFrame;
         videoCapture >> firstFrame;
         //videoCapture.read(firstFrame);
         if (firstFrame.empty()) {
             cout << "Empty video!" << endl;
             return -1;;
         }
-        resize(firstFrame, firstFrame, Size(640, 360), 0, 0, INTER_CUBIC);
-        cv::Mat frameDescriptors;
+        //resize(firstFrame, firstFrame, Size(640, 360), 0, 0, INTER_CUBIC);
+        Mat frameDescriptors;
         frameDescriptor(firstFrame, frameKeypoints, frameDescriptors);
-        vector<vector<cv::DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, frameDescriptors);
+        vector<vector<DMatch>> dmatches = matchObjectsAndFrame(objDescriptors, frameDescriptors);
         
         vector<vector<int>> maskes;
         vector<Mat> Hs = findPointsHomographies(objKeypoints, frameKeypoints, dmatches, maskes);
         
-        vector<vector<cv::Point2f>> framePoints;
+        vector<vector<Point2f>> framePoints;
         vector<vector<DMatch>> goodMathces;
         for (int i = 0; i < objects.size(); ++i) {
             vector<int> mask = maskes[i];
@@ -173,23 +173,24 @@ int main() {
         //Show detected matches
         imshow("Object detection", img_matches );*/
 
-        cv::Mat frame_old;
+        Mat frame_old;
         videoCapture >> frame_old;
-        resize(frame_old, frame_old, Size(640, 360), 0, 0, INTER_CUBIC);
+        //resize(frame_old, frame_old, Size(640, 360), 0, 0, INTER_CUBIC);
         
         //vector<vector<Point2f>> p0 = framePoints;
         vector<vector<Point2f>> oldRectPoints = scene_corners; //Rect points of the old frame
         
         while(true) {
-            cv::Mat frame;
+            Mat frame;
             videoCapture >> frame;
             if (frame.empty())
                 break;
-            resize(frame, frame, Size(640, 360), 0, 0, INTER_CUBIC);
+            //resize(frame, frame, Size(640, 360), 0, 0, INTER_CUBIC);
             Mat drawFrame = frame.clone();
             vector<vector<Point2f>> newPoints;
             vector<vector<Point2f>> newRectPoints;
             vector<vector<Point2f>> goodNewPoints;
+            vector<Mat> pyramid;
             for (int i = 0; i < objects.size(); ++i) {
                 Scalar color = colors[i];
                 std::vector<Point2f> p0 = framePoints[i];
@@ -199,11 +200,12 @@ int main() {
                 
                 vector<uchar> status;
                 vector<float> err;
-                vector<cv::Mat> pyramid;
                 TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
-                
-                buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
+                if (pyramid.size() == 0 || true) {
+                    buildOpticalFlowPyramid(frame_old, pyramid, Size(7, 7), 3, true, BORDER_REFLECT_101, BORDER_CONSTANT, true);
+                }
                 calcOpticalFlowPyrLK(pyramid, frame, p0, p1, status, err, Size(7,7), 3, criteria);
+                
                 newPoints.push_back(p1);
                 
                 //Stores the good points of the new and current frames that matches well
@@ -223,7 +225,7 @@ int main() {
                     }
                 }
                 goodNewPoints.push_back(good_new);
-                cv::Mat H = cv::findHomography(good_old, good_new);
+                Mat H = findHomography(good_old, good_new);
                 
                 vector<Point2f> new_rect_points; //Points of the rect of the new frame
                 vector<Point2f> oldPoints = oldRectPoints[i];
@@ -245,11 +247,11 @@ int main() {
             oldRectPoints = newRectPoints;
         }
     }
-    cv::waitKey(0);
+    waitKey(0);
     return 0;
 }
 
-void drawRect(cv::Mat image, std::vector<Point2f> corners, Scalar color, int lineWidth) {
+void drawRect(Mat image, std::vector<Point2f> corners, Scalar color, int lineWidth) {
     line(image, corners[0], corners[1], color, lineWidth);
     line(image, corners[1], corners[2], color, lineWidth);
     line(image, corners[2], corners[3], color, lineWidth);
