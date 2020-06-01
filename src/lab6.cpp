@@ -159,11 +159,19 @@ int main() {
         
         vector<vector<Point2f>> scene_corners = computeRectCorners(objectCorners, Hs);
     
-        //Draw red lines between the corners of the frame object detected
-        for (vector<Point2f> corners : scene_corners) {
-            drawRect(firstFrame, corners);
+        //Draw the keypoints of the obejcts
+        Mat firsFrameDraw = firstFrame.clone();
+        for (int i = 0; i < scene_corners.size(); ++i) {
+            
+            vector<Point2f> points = framePoints[i];
+            for (int j = 0; j < points.size(); ++j) {
+                Point2f p = points[j];
+                circle(firsFrameDraw, p, 3, colors[i], -1);
+            }
+            
         }
-        imshow("RECT TEST", firstFrame);
+        
+        imshow("Keypoints", firsFrameDraw);
         
         for (int i = 0; i < objects.size(); ++i) {
             Mat img_matches;
