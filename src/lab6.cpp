@@ -141,7 +141,7 @@ int main() {
             framePoints.push_back(frame_points);
             goodMathces.push_back(good_matches);
         }
-        //==========Object recognition on frame is ended here==============
+        //==========Object recognition on first frame is ended here==============
         
         //Get the corners from the frame ( the object to be "detected" )
         
@@ -163,24 +163,18 @@ int main() {
         for (vector<Point2f> corners : scene_corners) {
             drawRect(firstFrame, corners);
         }
-        imshow("PROVA", firstFrame);
+        imshow("RECT TEST", firstFrame);
         
         for (int i = 0; i < objects.size(); ++i) {
             Mat img_matches;
             drawMatches(objects[i], objKeypoints[i], firstFrame, frameKeypoints, goodMathces[i], img_matches);
             imshow("Matches with object" + to_string(i + 1), img_matches);
         }
-        /*Mat img_matches;
-        drawMatches(object, objKeypoints, firstFrame, frameKeypoints, goodMatches, img_matches);
-
-        //Show detected matches
-        imshow("Object detection", img_matches );*/
 
         Mat frame_old;
         videoCapture >> frame_old;
         resize(frame_old, frame_old, Size(640, 360), 0, 0, INTER_CUBIC);
         
-        //vector<vector<Point2f>> p0 = framePoints;
         vector<vector<Point2f>> oldRectPoints = scene_corners; //Rect points of the old frame
         
         while(true) {
@@ -237,7 +231,7 @@ int main() {
                 perspectiveTransform(oldPoints, new_rect_points, H);
                 newRectPoints.push_back(new_rect_points);
                 
-                //Draw red lines
+                //Draw rects
                 drawRect(drawFrame, new_rect_points, color);
             }
 
